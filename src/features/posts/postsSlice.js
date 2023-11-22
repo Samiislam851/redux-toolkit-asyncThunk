@@ -20,6 +20,17 @@ export const addNewPost = createAsyncThunk('posts/addNewPost', async (initialPos
     return response.data
 })
 
+export const updatePost = createAsyncThunk('post/upDatePost', async (updatedPost) => {
+    const { id } = updatedPost;
+    try {
+        const POSTS_URL = `https://jsonplaceholder.typicode.com/posts/${id}`;
+        const response = await axios.put(POSTS_URL, updatedPost);
+        return response.data
+    } catch (error) {
+        return error.message;
+    }
+})
+
 const postsSlice = createSlice({
     name: 'posts',
     initialState,
@@ -108,12 +119,27 @@ const postsSlice = createSlice({
                 console.log(action.payload)
                 state.posts.push(action.payload)
             })
+            .addCase(updatePost.fulfilled, (state, action)=>{
+                if(!action.payload?.id){
+                    console.log('Update could not be completed');
+                    console.log(action.payload);
+                }
+                const {id} = action.payload;
+                action.payload.date = new Date().toISOString()
+                const otherPosts = state.posts.filter(post=> post.id != id);
+                 state.posts= [...otherPosts, action.payload];
+            })
     }
 })
 
 export const selectAllPosts = (state) => state.posts.posts;
 export const getPostsStatus = (state) => state.posts.status;
 export const getPostsError = (state) => state.posts.error;
+
+export const selectPostById = (state, postId) => {
+
+    return state.posts.posts.find(post => post.id == postId)
+}
 
 export const { postAdded, reactionAdded } = postsSlice.actions
 
