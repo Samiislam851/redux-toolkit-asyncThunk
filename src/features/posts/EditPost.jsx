@@ -16,7 +16,7 @@ const EditPost = () => {
     const [content, setContent] = useState(post.body);
 
     const onTitleChange = e => setTitle(e.target.value);
-    const onAuthorChange = e => setAuthor(e.target.value);
+    const onAuthorChange = e => setAuthor(Number(e.target.value));
     const onContentChange = e => setContent(e.target.value);
     console.log(title);
     const users = useSelector(selectAllUsers)

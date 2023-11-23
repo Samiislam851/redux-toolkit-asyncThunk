@@ -1,14 +1,16 @@
-import { createSlice, nanoid, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createEntityAdapter, createAsyncThunk, createSelector } from "@reduxjs/toolkit";
 import { sub } from 'date-fns';
 import axios from "axios";
 
 const POSTS_URL = 'https://jsonplaceholder.typicode.com/posts';
+const postAdapter = createEntityAdapter({
+    sortComparer: (a, b) => b.date.localeCompare(a.date)
 
-const initialState = {
-    posts: [],
+})
+const initialState = postAdapter.getInitialState({
     status: 'idle', //'idle' | 'loading' | 'succeeded' | 'failed'
     error: null
-}
+})
 
 export const fetchPosts = createAsyncThunk('posts/fetchPosts', async () => {
     const response = await axios.get(POSTS_URL)
@@ -42,7 +44,6 @@ const postsSlice = createSlice({
             prepare(title, content, userId) {
                 return {
                     payload: {
-                        id: nanoid(),
                         title,
                         content,
                         date: new Date().toISOString(),
@@ -60,7 +61,7 @@ const postsSlice = createSlice({
         },
         reactionAdded(state, action) {
             const { postId, reaction } = action.payload
-            const existingPost = state.posts.find(post => post.id === postId)
+            const existingPost = state.entity[postId]
             if (existingPost) {
                 existingPost.reactions[reaction]++
             }
@@ -88,7 +89,7 @@ const postsSlice = createSlice({
                 });
 
                 // Add any fetched posts to the array
-                state.posts = state.posts.concat(loadedPosts)
+                state.posts = postAdapter.upsertMany(state, loadedPosts)
             })
             .addCase(fetchPosts.rejected, (state, action) => {
                 state.status = 'failed'
@@ -117,17 +118,17 @@ const postsSlice = createSlice({
                     eyes: 0
                 }
                 console.log(action.payload)
-                state.posts.push(action.payload)
+                postAdapter.addOne(state, action.payload)
             })
-            .addCase(updatePost.fulfilled, (state, action)=>{
-                if(!action.payload?.id){
+            .addCase(updatePost.fulfilled, (state, action) => {
+                if (!action.payload?.id) {
                     console.log('Update could not be completed');
                     console.log(action.payload);
                 }
-                const {id} = action.payload;
+                const { id } = action.payload;
                 action.payload.date = new Date().toISOString()
-                const otherPosts = state.posts.filter(post=> post.id != id);
-                 state.posts= [...otherPosts, action.payload];
+                const otherPosts = state.posts.filter(post => post.id != id);
+            postAdapter.updateOne(state, action.payload)
             })
     }
 })
@@ -140,6 +141,10 @@ export const selectPostById = (state, postId) => {
 
     return state.posts.posts.find(post => post.id == postId)
 }
+export const selectPostForThisUser = createSelector(
+    [selectAllPosts, (state, userId) => userId],
+    (posts, userId) => posts.filter(post => post.userId === Number(userId))
+);
 
 export const { postAdded, reactionAdded } = postsSlice.actions
 

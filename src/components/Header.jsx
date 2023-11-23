@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const Header = () => {
+    const [state, setState] = useState(0);
     return (
         <div style={{background: 'purple'}}>
             <h1 style={{color:"white"}}>Redux Blog</h1>
@@ -13,6 +14,10 @@ const Header = () => {
                     </li>
                     <li>
                         <Link to="post">Post</Link>
+                    </li>
+                    <li><Link to="users">Users</Link></li>
+                    <li>
+                        <button onClick={()=> setState(state+1)}>{state}</button>
                     </li>
                 </ul>
             </nav>
