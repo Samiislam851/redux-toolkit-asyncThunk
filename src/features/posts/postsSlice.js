@@ -22,7 +22,7 @@ export const addNewPost = createAsyncThunk('posts/addNewPost', async (initialPos
     return response.data
 })
 
-export const updatePost = createAsyncThunk('post/upDatePost', async (updatedPost) => {
+export const updatePost = createAsyncThunk('post/updatePost', async (updatedPost) => {
     const { id } = updatedPost;
     try {
         const POSTS_URL = `https://jsonplaceholder.typicode.com/posts/${id}`;
@@ -39,7 +39,7 @@ const postsSlice = createSlice({
     reducers: {
         postAdded: {
             reducer(state, action) {
-                state.posts.push(action.payload)
+                postAdapter.addOne(state, action.payload)
             },
             prepare(title, content, userId) {
                 return {
@@ -61,7 +61,7 @@ const postsSlice = createSlice({
         },
         reactionAdded(state, action) {
             const { postId, reaction } = action.payload
-            const existingPost = state.entity[postId]
+            const existingPost = state.entities[postId]
             if (existingPost) {
                 existingPost.reactions[reaction]++
             }
@@ -128,24 +128,28 @@ const postsSlice = createSlice({
                 const { id } = action.payload;
                 action.payload.date = new Date().toISOString()
                 const otherPosts = state.posts.filter(post => post.id != id);
-            postAdapter.updateOne(state, action.payload)
+                postAdapter.upsertOne(state, action.payload)
             })
     }
 })
 
-export const selectAllPosts = (state) => state.posts.posts;
 export const getPostsStatus = (state) => state.posts.status;
 export const getPostsError = (state) => state.posts.error;
 
-export const selectPostById = (state, postId) => {
+export const {
+    selectAll: selectAllPosts,
+    selectById: selectPostById,
+    selectIds: selectPostIds
 
-    return state.posts.posts.find(post => post.id == postId)
-}
+} = postAdapter.getSelectors(state => state.posts)
+
+
 export const selectPostForThisUser = createSelector(
     [selectAllPosts, (state, userId) => userId],
     (posts, userId) => posts.filter(post => post.userId === Number(userId))
 );
 
 export const { postAdded, reactionAdded } = postsSlice.actions
+
 
 export default postsSlice.reducer
