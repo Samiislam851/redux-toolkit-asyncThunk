@@ -89,7 +89,7 @@ const postsSlice = createSlice({
                 });
 
                 // Add any fetched posts to the array
-                state.posts = postAdapter.upsertMany(state, loadedPosts)
+               postAdapter.upsertMany(state, loadedPosts)
             })
             .addCase(fetchPosts.rejected, (state, action) => {
                 state.status = 'failed'

@@ -9,7 +9,8 @@ const PostsList = () => {
     const orderedPostsIds = useSelector(selectPostIds);
     const postStatus = useSelector(getPostsStatus);
     const error = useSelector(getPostsError);
-
+    const state = useSelector(state=> state)
+ console.log(state);
     // useEffect(() => {
     //     if (postStatus === 'idle') {
     //         dispatch(fetchPosts())
